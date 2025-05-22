@@ -1,0 +1,157 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: >
+  Create 3 IAM users with passwords and 3 Windows EC2 instances (t2.micro),
+  each IAM user can access only their own EC2 instance via Console (RDP).
+
+Parameters:
+  KeyPairName:
+    Type: String
+    Default: key30April
+    Description: Name of an existing EC2 KeyPair to enable RDP access
+
+Resources:
+  RDPSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Enable RDP access
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 3389
+          ToPort: 3389
+          CidrIp: 0.0.0.0/0
+
+  ChaithuInstance:
+    Type: AWS::EC2::Instance
+    Properties:
+      InstanceType: t2.micro
+      KeyName: !Ref KeyPairName
+      ImageId: ami-082267bbf21c9e2fb
+      SecurityGroupIds:
+        - !Ref RDPSecurityGroup
+      Tags:
+        - Key: Name
+          Value: Chaithu-Instance
+
+  RenuInstance:
+    Type: AWS::EC2::Instance
+    Properties:
+      InstanceType: t2.micro
+      KeyName: !Ref KeyPairName
+      ImageId: ami-082267bbf21c9e2fb
+      SecurityGroupIds:
+        - !Ref RDPSecurityGroup
+      Tags:
+        - Key: Name
+          Value: Renu-Instance
+
+  SrinivasInstance:
+    Type: AWS::EC2::Instance
+    Properties:
+      InstanceType: t2.micro
+      KeyName: !Ref KeyPairName
+      ImageId: ami-082267bbf21c9e2fb
+      SecurityGroupIds:
+        - !Ref RDPSecurityGroup
+      Tags:
+        - Key: Name
+          Value: Srinivas-Instance
+
+  ChaithuUser:
+    Type: AWS::IAM::User
+    Properties:
+      UserName: Chaithu
+      LoginProfile:
+        Password: Chaithu@2007
+        PasswordResetRequired: false
+
+  RenuUser:
+    Type: AWS::IAM::User
+    Properties:
+      UserName: Renu
+      LoginProfile:
+        Password: Renu@1975
+        PasswordResetRequired: false
+
+  SrinivasUser:
+    Type: AWS::IAM::User
+    Properties:
+      UserName: Srinivas
+      LoginProfile:
+        Password: Srinu@1969
+        PasswordResetRequired: false
+
+  ChaithuPolicy:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: ChaithuEC2AccessPolicy
+      Users:
+        - !Ref ChaithuUser
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action: ec2:DescribeInstances
+            Resource: "*"
+          - Effect: Allow
+            Action:
+              - ec2:StartInstances
+              - ec2:StopInstances
+              - ec2:RebootInstances
+              - ec2:GetConsoleScreenshot
+              - ec2:GetPasswordData
+            Resource: !Sub arn:aws:ec2:${AWS::Region}:${AWS::AccountId}:instance/${ChaithuInstance}
+
+  RenuPolicy:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: RenuEC2AccessPolicy
+      Users:
+        - !Ref RenuUser
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action: ec2:DescribeInstances
+            Resource: "*"
+          - Effect: Allow
+            Action:
+              - ec2:StartInstances
+              - ec2:StopInstances
+              - ec2:RebootInstances
+              - ec2:GetConsoleScreenshot
+              - ec2:GetPasswordData
+            Resource: !Sub arn:aws:ec2:${AWS::Region}:${AWS::AccountId}:instance/${RenuInstance}
+
+  SrinivasPolicy:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: SrinivasEC2AccessPolicy
+      Users:
+        - !Ref SrinivasUser
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action: ec2:DescribeInstances
+            Resource: "*"
+          - Effect: Allow
+            Action:
+              - ec2:StartInstances
+              - ec2:StopInstances
+              - ec2:RebootInstances
+              - ec2:GetConsoleScreenshot
+              - ec2:GetPasswordData
+            Resource: !Sub arn:aws:ec2:${AWS::Region}:${AWS::AccountId}:instance/${SrinivasInstance}
+
+Outputs:
+  ChaithuLogin:
+    Description: Chaithu IAM user login credentials
+    Value: "Username: Chaithu, Password: Chaithu@2007"
+
+  RenuLogin:
+    Description: Renu IAM user login credentials
+    Value: "Username: Renu, Password: Renu@1975"
+
+  SrinivasLogin:
+    Description: Srinivas IAM user login credentials
+    Value: "Username: Srinivas, Password: Srinu@1969"
