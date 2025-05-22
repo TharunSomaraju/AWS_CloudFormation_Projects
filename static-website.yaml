@@ -1,0 +1,38 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: CloudFormation template to create an S3 bucket for hosting a static website
+
+Resources:
+  # S3 Bucket for the Static Website
+  StaticWebsiteBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: my-static-website-2025
+      AccessControl: PublicRead
+      WebsiteConfiguration:
+        IndexDocument: index.html
+        ErrorDocument: error.html
+      Tags:
+        - Key: Name
+          Value: StaticWebsiteBucket
+
+  # Bucket Policy to Allow Public Read Access
+  BucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref StaticWebsiteBucket
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal: '*'
+            Action: 's3:GetObject'
+            Resource: !Sub 'arn:aws:s3:::my-static-website-2025/*'
+
+Outputs:
+  WebsiteURL:
+    Description: URL of the static website
+    Value: !GetAtt StaticWebsiteBucket.WebsiteURL
+
+  BucketName:
+    Description: Name of the S3 bucket
+    Value: !Ref StaticWebsiteBucket
