@@ -1,0 +1,166 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: >
+  Create 3 IAM users with passwords and 3 Windows EC2 instances (t3.small, 100GB),
+  each IAM user can access only their own EC2 instance via Console (RDP) with their unique KeyPair.
+
+Resources:
+  RDPSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Enable RDP access
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 3389
+          ToPort: 3389
+          CidrIp: 0.0.0.0/0
+
+  SuryaInstance:
+    Type: AWS::EC2::Instance
+    Properties:
+      InstanceType: t3.small
+      KeyName: suryaKeyPair
+      ImageId: ami-0a56bfb349bfb3bb8 # Windows Server 2019 AMI
+      SecurityGroupIds:
+        - !Ref RDPSecurityGroup
+      BlockDeviceMappings:
+        - DeviceName: /dev/sda1
+          Ebs:
+            VolumeSize: 100
+            VolumeType: gp3
+      Tags:
+        - Key: Name
+          Value: Surya-Instance
+
+  VikramInstance:
+    Type: AWS::EC2::Instance
+    Properties:
+      InstanceType: t3.small
+      KeyName: vikramKeyPair
+      ImageId: ami-0a56bfb349bfb3bb8
+      SecurityGroupIds:
+        - !Ref RDPSecurityGroup
+      BlockDeviceMappings:
+        - DeviceName: /dev/sda1
+          Ebs:
+            VolumeSize: 100
+            VolumeType: gp3
+      Tags:
+        - Key: Name
+          Value: Vikram-Instance
+
+  ChaithuInstance:
+    Type: AWS::EC2::Instance
+    Properties:
+      InstanceType: t3.small
+      KeyName: chaithuKeyPair
+      ImageId: ami-0a56bfb349bfb3bb8
+      SecurityGroupIds:
+        - !Ref RDPSecurityGroup
+      BlockDeviceMappings:
+        - DeviceName: /dev/sda1
+          Ebs:
+            VolumeSize: 100
+            VolumeType: gp3
+      Tags:
+        - Key: Name
+          Value: Chaithu-Instance
+
+  SuryaUser:
+    Type: AWS::IAM::User
+    Properties:
+      UserName: Surya
+      LoginProfile:
+        Password: Surya@0303
+        PasswordResetRequired: false
+
+  VikramUser:
+    Type: AWS::IAM::User
+    Properties:
+      UserName: Vikram
+      LoginProfile:
+        Password: Vikram@2001
+        PasswordResetRequired: false
+
+  ChaithuUser:
+    Type: AWS::IAM::User
+    Properties:
+      UserName: Chaithu
+      LoginProfile:
+        Password: Chaithu@2007
+        PasswordResetRequired: false
+
+  SuryaPolicy:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: SuryaEC2AccessPolicy
+      Users:
+        - !Ref SuryaUser
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action: ec2:DescribeInstances
+            Resource: "*"
+          - Effect: Allow
+            Action:
+              - ec2:StartInstances
+              - ec2:StopInstances
+              - ec2:RebootInstances
+              - ec2:GetConsoleScreenshot
+              - ec2:GetPasswordData
+            Resource: !Sub arn:aws:ec2:${AWS::Region}:${AWS::AccountId}:instance/${SuryaInstance}
+
+  VikramPolicy:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: VikramEC2AccessPolicy
+      Users:
+        - !Ref VikramUser
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action: ec2:DescribeInstances
+            Resource: "*"
+          - Effect: Allow
+            Action:
+              - ec2:StartInstances
+              - ec2:StopInstances
+              - ec2:RebootInstances
+              - ec2:GetConsoleScreenshot
+              - ec2:GetPasswordData
+            Resource: !Sub arn:aws:ec2:${AWS::Region}:${AWS::AccountId}:instance/${VikramInstance}
+
+  ChaithuPolicy:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: ChaithuEC2AccessPolicy
+      Users:
+        - !Ref ChaithuUser
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action: ec2:DescribeInstances
+            Resource: "*"
+          - Effect: Allow
+            Action:
+              - ec2:StartInstances
+              - ec2:StopInstances
+              - ec2:RebootInstances
+              - ec2:GetConsoleScreenshot
+              - ec2:GetPasswordData
+            Resource: !Sub arn:aws:ec2:${AWS::Region}:${AWS::AccountId}:instance/${ChaithuInstance}
+
+Outputs:
+  SuryaLogin:
+    Description: Surya IAM user login credentials
+    Value: "Username: Surya, Password: Surya@0303"
+
+  VikramLogin:
+    Description: Vikram IAM user login credentials
+    Value: "Username: Vikram, Password: Vikram@2001"
+
+  ChaithuLogin:
+    Description: Chaithu IAM user login credentials
+    Value: "Username: Chaithu, Password: Chaithu@2007"
